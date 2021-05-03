@@ -13,6 +13,9 @@ public class LZencode {
     private int phaseNumber;
 
 
+    public LZencode() throws FileNotFoundException {
+    }
+
     public class LZbytes{
             //set the variables for binary search tree
             private int key;
@@ -35,9 +38,7 @@ public class LZencode {
 
     public static void main(String [] args) throws IOException {
 
-        //encode();
         LZencode encode = new LZencode();
-
 
          /*       if(args.length != 1){
                     System.err.println("Usage:  java TestStream <filename>");
@@ -45,23 +46,20 @@ public class LZencode {
                 }*/
 
 
-        try{
-            String file ="1.txt";
+        String file = "1.txt";
+        FileInputStream fis = new FileInputStream((file));
 
-            FileInputStream fis = new FileInputStream((file));
-            int c;
+        int c;
+        while ((c = fis.read()) != -1) {
 
-
-            while((c = fis.read()) != -1){
-
-                System.out.println(c + " --> " + (char)c);
-            }
-        }catch(Exception e){
+            encode.addRoot(c);
+            encode.output(encode.root, fis.read());
+            //System.out.println(c + " --> " + (char)c);
         }
     }
 
 
-/*    private static void encode() throws IOException {
+   /* private static void encode() throws IOException {
         LZencode LZ = new LZencode();
         String file ="1.txt";
 
@@ -74,52 +72,45 @@ public class LZencode {
         }
     }*/
 
-        public void add(int k) {
+        public void addRoot(int k) {
 
-                LZbytes pointer;
-                LZbytes tmp = new LZbytes(k);
+            LZbytes tmp = new LZbytes(k);
 
-        if (root==null){
+            if (root == null) {
 
-            root=tmp;
-            root.phaseNumber=0;
-            System.out.println(root.phaseNumber+" "+(char)root.key);
-            return;
-        }else {
-
-            pointer = root;
-
-            findLongest(pointer, tmp);
-            // System.out.println(phaseNumber+" ");
+                root = tmp;
+                root.phaseNumber = 0;
+                System.out.println(root.phaseNumber + " " + (char) root.key);
+            }
         }
-    }
 
 
 
-    public void findLongest(LZbytes localRoot, LZbytes input)  {
 
-        if (has(input.key)){
+    public void output(LZbytes localRoot, int input ) throws IOException {
 
-            System.out.println(input.key);//print identical key;
+        if (has(input)){
+
+            System.out.print((char) input);//print identical key;
 
 
             //Find NEXT DATUM
-            //findLongest(find(input.key), input);//wrong input(in 2nd place)
-
+           // output(find(input),fis.read() );//wrong input(in 2nd place)
 
         }else {
-
 
             //Print mismatched character
             LZbytes misMatched=insert(localRoot,input);
 
+            phaseNumber+=1;
             //INSERT NEW MISMATCH TO THE TREE with its phase number
-            misMatched.phaseNumber+=1;
+            misMatched.phaseNumber=phaseNumber;
         }
     }
 
-    public LZbytes insert(LZbytes localRoot, LZbytes newNode){
+    public LZbytes insert(LZbytes localRoot, int c ){
 
+            LZbytes newNode =  new LZbytes(c);
         //compare value with the root (larger)
         if (newNode.key>localRoot.key){
 
@@ -128,7 +119,7 @@ public class LZencode {
                 //change the current position to right child
                 localRoot=localRoot.right;
                 //iterate until the value find a last leaf
-                insert(localRoot,newNode);
+                insert(localRoot,newNode.key);
             }
 
             //last leaf to add
@@ -137,7 +128,6 @@ public class LZencode {
                 localRoot.right= newNode;
                 phaseNumber+=1;
                 return newNode;
-
             }
         }
         //smaller value than the root
@@ -150,7 +140,7 @@ public class LZencode {
                 localRoot=localRoot.left;
 
                 //iterate until the value find a last leaf
-                insert(localRoot,newNode);
+                insert(localRoot,newNode.key);
             }
 
             //last leaf to add
@@ -165,7 +155,7 @@ public class LZencode {
             //change the current position to right child
             localRoot=localRoot.same;
             //iterate until the value find a last leaf
-            insert(localRoot,newNode);
+            insert(localRoot,newNode.key);
         }
         localRoot.same=newNode;
         phaseNumber+=1;
@@ -212,7 +202,6 @@ public class LZencode {
         // value found and return it
         return curr;
     }
-
 
 
 }
