@@ -1,5 +1,6 @@
 import org.w3c.dom.ls.LSException;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.io.FileInputStream;
@@ -7,39 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class LZencode {
-
-
-
-
-    public static void main(String [] args){
-
-
-        LZencode encode = new LZencode();
-
-/*
-                if(args.length != 1){
-                    System.err.println("Usage:  java TestStream <filename>");
-                    return;
-                }*/
-
-
-        try{
-            String file ="src/1.txt";
-
-            FileInputStream fis = new FileInputStream((file));
-            int c;
-            Path tempFile = Files.createTempFile("temp-", ".txt");
-
-            Files.write(tempFile, "Hello From Temp File\n".getBytes(StandardCharsets.UTF_8));
-
-            while((c = fis.read()) != -1){
-                encode.add(c);
-                //System.out.println(c + " --> " + (char)c);
-            }
-        }catch(Exception e){
-        }finally{
-        }
-    }
 
     private LZbytes root;
     private int phaseNumber;
@@ -65,40 +33,92 @@ public class LZencode {
         }
     }
 
-    public void add(int k){
+    public static void main(String [] args) throws IOException {
 
-        LZbytes tmp = new LZbytes(k);
-        LZbytes pointer;
+        //encode();
+        LZencode encode = new LZencode();
+
+
+         /*       if(args.length != 1){
+                    System.err.println("Usage:  java TestStream <filename>");
+                    return;
+                }*/
+
+
+        try{
+            String file ="1.txt";
+
+            FileInputStream fis = new FileInputStream((file));
+            int c;
+
+
+            while((c = fis.read()) != -1){
+
+                System.out.println(c + " --> " + (char)c);
+            }
+        }catch(Exception e){
+        }
+    }
+
+
+/*    private static void encode() throws IOException {
+        LZencode LZ = new LZencode();
+        String file ="1.txt";
+
+
+        FileInputStream fis = new FileInputStream((file));
+        int c;
+        while((c = fis.read()) != -1){
+
+
+        }
+    }*/
+
+        public void add(int k) {
+
+                LZbytes pointer;
+                LZbytes tmp = new LZbytes(k);
 
         if (root==null){
-            root=tmp;
-            phaseNumber=0;
-            System.out.println(phaseNumber+" "+(char)root.key);
-            return;
-        }
-        pointer=root;
 
-        findLongest(pointer, tmp);
-        phaseNumber += 1;
-       // System.out.println(phaseNumber+" ");
+            root=tmp;
+            root.phaseNumber=0;
+            System.out.println(root.phaseNumber+" "+(char)root.key);
+            return;
+        }else {
+
+            pointer = root;
+
+            findLongest(pointer, tmp);
+            // System.out.println(phaseNumber+" ");
+        }
     }
 
 
-    public void findLongest(LZbytes localRoot, LZbytes input){
+
+    public void findLongest(LZbytes localRoot, LZbytes input)  {
 
         if (has(input.key)){
-            //FIND THE NODE
-            LZbytes matchedLZbyte=find(input.key);
-           System.out.println( matchedLZbyte.key);
+
+            System.out.println(input.key);//print identical key;
+
+
+            //Find NEXT DATUM
+            //findLongest(find(input.key), input);//wrong input(in 2nd place)
+
 
         }else {
-            //INSERT NEW MISMATCH TO THE TREE
-            insert(localRoot, input);
+
+
+            //Print mismatched character
+            LZbytes misMatched=insert(localRoot,input);
+
+            //INSERT NEW MISMATCH TO THE TREE with its phase number
+            misMatched.phaseNumber+=1;
         }
     }
 
-    public void insert(LZbytes localRoot, LZbytes newNode){
-
+    public LZbytes insert(LZbytes localRoot, LZbytes newNode){
 
         //compare value with the root (larger)
         if (newNode.key>localRoot.key){
@@ -115,11 +135,13 @@ public class LZencode {
             else {
 
                 localRoot.right= newNode;
+                phaseNumber+=1;
+                return newNode;
 
             }
         }
         //smaller value than the root
-        else {
+        else if (newNode.key<localRoot.key){
 
             //check if there is more roots on the left
             if(localRoot.left!=null){
@@ -133,11 +155,21 @@ public class LZencode {
 
             //last leaf to add
             else{
-
                 localRoot.left=newNode;
-
+                phaseNumber+=1;
+                return newNode;
             }
         }
+        if(localRoot.same!=null){
+
+            //change the current position to right child
+            localRoot=localRoot.same;
+            //iterate until the value find a last leaf
+            insert(localRoot,newNode);
+        }
+        localRoot.same=newNode;
+        phaseNumber+=1;
+        return newNode;
     }
 
     public boolean has(int k){
