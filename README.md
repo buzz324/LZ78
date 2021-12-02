@@ -1,7 +1,7 @@
 "# LZ78" 
 
 
-LZ78 Compression
+**LZ78 Compression**
 
 Description: Implement LZ78 compression
 
